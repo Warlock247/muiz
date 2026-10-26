@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Internship Management Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>
+    emailjs.init({ publicKey: "sNi2AVf3oBInwdYEe" });
+  </script>
+</head>
+<body>
+  <!-- ==================== AUTH CONTAINER (LOGGED OUT) ==================== -->
+  <div class="auth-wrapper" id="authWrapper">
+    <div class="auth-card">
+      <div class="auth-card-header">
+        <div class="portal-brand-badge">🎓 SIWES PORTAL</div>
+        <h1>Internship Management Portal</h1>
+        <p class="portal-subtitle">Digital student submissions, verification, and logbook system.</p>
+      </div>
+
+      <div class="login-panel" id="authPanel">
+        <div id="backendMessage" class="auth-error hidden"></div>
+        <div class="login-buttons">
+          <button type="button" id="studentLoginButton" class="login-switch active">Student Login</button>
+          <button type="button" id="studentSignupButton" class="login-switch">Student Sign Up</button>
+          <button type="button" id="lecturerRoleButton" class="login-switch">Lecturer</button>
+        </div>
+
+        <!-- Student LOGIN Form -->
+        <form id="studentLoginForm" class="role-login active">
+          <div class="field-group">
+            <label for="studentMatric">Matric Number (9 digits)</label>
+            <input type="text" id="studentMatric" name="studentMatric" placeholder="e.g. 200456789" maxlength="9" pattern="\d{9}" inputmode="numeric" required />
+            <small class="file-help">Must be exactly 9 digits.</small>
+          </div>
+          <div class="field-group">
+            <label for="studentPassword">Password</label>
+            <input type="password" id="studentPassword" name="studentPassword" placeholder="Enter your password" required />
+            <small class="file-help">Enter your surname exactly as you entered it during sign up. It will be checked along with your matric number.</small>
+          </div>
+          <div class="login-actions">
+            <button type="submit" class="primary-btn">Login to Dashboard</button>
+            <button type="button" id="forgotPasswordButton" class="link-button">Forgot password?</button>
+          </div>
+          <div class="forgot-message hidden" id="forgotMessage">Use the password you created during sign up.</div>
+        </form>
+
+        <!-- Student SIGNUP Form - Step 1: Details -->
+        <form id="studentSignupForm" class="role-login hidden">
+          <h3 class="auth-step-title">📝 Step 1: Student Information</h3>
+          <div class="field-group">
+            <label for="signupSurname">Surname (Last Name)</label>
+            <input type="text" id="signupSurname" name="signupSurname" placeholder="e.g. Olaoye" required />
+            <small class="file-help">Your surname will be used as your student password.</small>
+          </div>
+          <div class="field-group">
+            <label for="signupFirstName">First Name</label>
+            <input type="text" id="signupFirstName" name="signupFirstName" placeholder="e.g. Muiz" required />
+          </div>
+          <div class="field-group">
+            <label for="signupMatric">Matric Number (9 digits)</label>
+            <input type="text" id="signupMatric" name="signupMatric" placeholder="e.g. 200456789" maxlength="9" pattern="\d{9}" inputmode="numeric" required />
+            <small class="file-help">Must be exactly 9 digits.</small>
+          </div>
+          <div class="field-group">
+            <label for="signupEmail">Email Address</label>
+            <input type="email" id="signupEmail" name="signupEmail" placeholder="e.g. student@university.edu.ng" required />
+            <small class="file-help">OTP verification code will be sent here.</small>
+          </div>
+          <div class="login-actions">
+            <button type="submit" class="primary-btn">Send OTP & Continue</button>
+          </div>
+          <div id="signupError" class="auth-error hidden"></div>
+        </form>
+
+        <!-- Student SIGNUP - Step 2: OTP Verification -->
+        <div id="otpVerifySection" class="role-login hidden">
+          <h3 class="auth-step-title">🔐 Step 2: Verify Your Email</h3>
+          <div class="otp-info" id="otpInfoMessage">
+            A 6-digit verification code has been sent to your email address.
+          </div>
+
+          <form id="otpVerifyForm">
+            <div class="field-group">
+              <label for="otpInput">Enter 6-Digit OTP Code</label>
+              <input type="text" id="otpInput" name="otpInput" placeholder="e.g. 482910" maxlength="6" pattern="\d{6}" inputmode="numeric" required />
+              <small class="file-help">Check your inbox and spam folder for the code.</small>
+            </div>
+            <div class="otp-timer" id="otpTimer">Code expires in <strong id="otpCountdown">120</strong> seconds</div>
+            <div class="login-actions">
+              <button type="submit" class="primary-btn">Verify & Create Account</button>
+              <button type="button" id="resendOtpButton" class="link-button" disabled>Resend OTP</button>
+            </div>
+            <div id="otpError" class="auth-error hidden"></div>
+          </form>
+        </div>
+
+        <!-- Lecturer Login Form -->
+        <form id="lecturerLoginForm" class="role-login hidden">
+          <div class="field-group">
+            <label for="lecturerEmail">Lecturer Email</label>
+            <input type="email" id="lecturerEmail" name="lecturerEmail" placeholder="lecturer@university.edu" autocomplete="username" required />
+          </div>
+          <div class="field-group">
+            <label for="lecturerPassword">Lecturer Passcode</label>
+            <input type="password" id="lecturerPassword" name="lecturerPassword" placeholder="Enter lecturer passcode" autocomplete="current-password" required />
+          </div>
+          <div class="login-actions">
+            <button type="submit" class="primary-btn">Lecturer Login</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="auth-footer-bar">
+        <span>Internship Management System</span>
+        <button type="button" id="themeToggleBtnAuth" class="theme-btn" title="Toggle Theme">🌓 Theme</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN DASHBOARD LAYOUT (LOGGED IN) ==================== -->
+  <div class="dashboard-shell hidden" id="dashboardShell">
+    <!-- Top Navigation Header -->
+    <header class="dash-top-header">
+      <div class="dash-brand-area">
+        <button type="button" id="sidebarToggleBtn" class="sidebar-toggle-btn" title="Toggle Sidebar">☰</button>
+        <span class="dash-brand-title">🎓 SIWES Internship Portal</span>
+      </div>
+
+      <div class="dash-user-bar">
+        <!-- Student Info Display (Top) -->
+        <div id="studentHeaderBadge" class="user-badge-header">
+          <div class="user-avatar-circle">👤</div>
+          <div class="user-meta-text">
+            <strong id="loggedInStudentName">Student Name</strong>
+            <span class="matric-chip" id="loggedInMatric">200000000</span>
+          </div>
+        </div>
+
+        <!-- Lecturer Info Display (Top) -->
+        <div id="lecturerHeaderBadge" class="user-badge-header hidden">
+          <div class="user-avatar-circle lecturer-avatar">👨‍🏫</div>
+          <div class="user-meta-text">
+            <strong>Lecturer Portal</strong>
+            <span class="matric-chip">Faculty Coordinator</span>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <button type="button" id="themeToggleBtnDash" class="theme-btn" title="Toggle Theme">🌓 Theme</button>
+        <button type="button" id="logoutBtn" class="logout-btn" title="Sign out">🚪 Logout</button>
+      </div>
+    </header>
+
+    <div class="dash-body">
+      <!-- SIDEBAR NAVIGATION MENU -->
+      <aside class="dash-sidebar" id="dashSidebar">
+        <!-- Student Sidebar Menu -->
+        <div id="studentSidebarMenu" class="sidebar-menu-group">
+          <div class="sidebar-section-label">MAIN MENU</div>
+          <button type="button" class="sidebar-nav-btn active" data-view="status">
+            <span class="nav-icon">📋</span> My Application
+          </button>
+          <button type="button" class="sidebar-nav-btn" data-view="form">
+            <span class="nav-icon">📝</span> Edit / Form
+          </button>
+          <button type="button" class="sidebar-nav-btn" data-view="logbook" id="sideLogbookBtn">
+            <span class="nav-icon">📖</span> Weekly Logbook
+            <span class="lock-indicator" id="sideLogbookLock">🔒</span>
+          </button>
+          <button type="button" class="sidebar-nav-btn" data-view="slip" id="sideSlipBtn">
+            <span class="nav-icon">🖨️</span> Clearance Slip
+            <span class="lock-indicator" id="sideSlipLock">🔒</span>
+          </button>
+        </div>
+
+        <!-- Lecturer Sidebar Menu -->
+        <div id="lecturerSidebarMenu" class="sidebar-menu-group hidden">
+          <div class="sidebar-section-label">LECTURER REVIEW</div>
+          <button type="button" class="sidebar-nav-btn active" data-view="lecturer-dash">
+            <span class="nav-icon">📊</span> Review Dashboard
+          </button>
+          <button type="button" class="sidebar-nav-btn" id="sideExportBtn">
+            <span class="nav-icon">📥</span> Export Records (CSV)
+          </button>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT VIEW AREA -->
+      <main class="dash-main-content">
+        <!-- ==================== VIEW 1: STUDENT APPLICATION STATUS ==================== -->
+        <section id="viewStudentStatus" class="dash-view-section">
+          <div class="view-header">
+            <h2>Internship Placement Status</h2>
+            <div class="view-header-actions">
+              <button type="button" id="editSubmissionBtn" class="primary-btn-sm">✏️ Edit Submission</button>
+              <button type="button" id="viewClearanceTopBtn" class="outline-button hidden">🖨️ Clearance Slip</button>
+            </div>
+          </div>
+
+          <div class="record-panel" id="recordPanel">
+            <div class="record-empty" id="recordEmpty">No submission recorded yet. Click "Edit / Form" in the sidebar to submit your application.</div>
+
+            <div class="record-details hidden" id="recordDetails">
+              <div class="record-item"><strong>Full Name:</strong> <span id="recordFullName"></span></div>
+              <div class="record-item"><strong>Matric Number:</strong> <span id="recordMatricNumber"></span></div>
+              <div class="record-item"><strong>Department & School:</strong> <span id="recordDeptSchool"></span></div>
+              <div class="record-item"><strong>Company Name:</strong> <span id="recordCompanyName"></span></div>
+              <div class="record-item"><strong>Company Phone:</strong> <span id="recordCompanyPhone"></span></div>
+              <div class="record-item"><strong>Supervisor:</strong> <span id="recordSupervisor"></span></div>
+              <div class="record-item"><strong>Start Date & End Date:</strong> <span id="recordDates"></span></div>
+              <div class="record-item">
+                <strong>Duration Progress:</strong>
+                <span id="recordProgressPercent">0%</span>
+              </div>
+              <div class="progress-container hidden" id="recordProgressBar">
+                <div class="progress-fill" id="recordProgressFill"></div>
+              </div>
+              <div class="record-item">
+                <strong>Review Status:</strong>
+                <span id="recordStatusBadge"></span>
+              </div>
+              <div class="record-item hidden" id="recordFeedbackRow">
+                <strong>Lecturer Feedback:</strong>
+                <span id="recordFeedbackText"></span>
+              </div>
+              <div class="record-item"><strong>Acceptance Form:</strong> <span id="recordAcceptanceForm"></span></div>
+              <div class="record-item"><strong>Application Letter:</strong> <span id="recordApplicationLetter"></span></div>
+              <div class="record-item"><strong>Additional Notes:</strong> <span id="recordNotes"></span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== VIEW 2: APPLICATION FORM ==================== -->
+        <section id="viewStudentForm" class="dash-view-section hidden">
+          <div class="view-header">
+            <h2 id="formTitle">Internship Application Form</h2>
+          </div>
+
+          <form id="submissionForm" action="#" method="post" enctype="multipart/form-data" class="content-card">
+            <div class="field-group">
+              <label for="fullName">Full Name</label>
+              <input type="text" id="fullName" name="fullName" placeholder="Enter your full name" required />
+            </div>
+
+            <div class="field-group">
+              <label for="matricNumber">Matric Number</label>
+              <input type="text" id="matricNumber" name="matricNumber" readonly />
+              <small class="file-help">Auto-filled from your account.</small>
+            </div>
+
+            <div class="field-row">
+              <div class="field-group">
+                <label for="department">Department</label>
+                <input type="text" id="department" name="department" placeholder="e.g. Computer Science" required />
+              </div>
+              <div class="field-group">
+                <label for="school">School / Faculty</label>
+                <input type="text" id="school" name="school" placeholder="e.g. School of Science" required />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="supervisor">School Supervisor</label>
+              <input type="text" id="supervisor" name="supervisor" placeholder="Enter supervisor's name" required />
+            </div>
+
+            <div class="field-row">
+              <div class="field-group">
+                <label for="companyName">Company Name</label>
+                <input type="text" id="companyName" name="companyName" placeholder="Enter company name" required />
+              </div>
+              <div class="field-group">
+                <label for="companyPhone">Company Phone Number</label>
+                <input type="text" id="companyPhone" name="companyPhone" placeholder="Enter company phone" required />
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field-group">
+                <label for="startDate">Start Date</label>
+                <input type="date" id="startDate" name="startDate" required />
+              </div>
+              <div class="field-group">
+                <label for="endDate">End Date</label>
+                <input type="date" id="endDate" name="endDate" required />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="acceptanceForm">Acceptance Form (PDF or Word)</label>
+              <input type="file" id="acceptanceForm" name="acceptanceForm" accept=".pdf,.doc,.docx,image/*" required />
+              <small class="file-help">Signed acceptance letter from the company.</small>
+            </div>
+
+            <div class="field-group">
+              <label for="applicationLetter">Application Letter (PDF or Word)</label>
+              <input type="file" id="applicationLetter" name="applicationLetter" accept=".pdf,.doc,.docx,image/*" required />
+              <small class="file-help">Original SIWES application letter.</small>
+            </div>
+
+            <div class="field-group">
+              <label for="additionalNotes">Additional Notes</label>
+              <textarea id="additionalNotes" name="additionalNotes" placeholder="Optional notes for supervisor..."></textarea>
+            </div>
+
+            <div class="submit-group">
+              <button type="submit" id="submitButton" class="primary-btn">Submit Application</button>
+            </div>
+            <div class="submit-status hidden" id="submitStatus">Submitted</div>
+          </form>
+        </section>
+
+        <!-- ==================== VIEW 3: WEEKLY LOGBOOK ==================== -->
+        <section id="viewStudentLogbook" class="dash-view-section hidden">
+          <div class="view-header">
+            <h2>Digital SIWES Weekly Logbook</h2>
+          </div>
+
+          <!-- LOCKED NOTICE (Displayed if submission is NOT accepted) -->
+          <div id="logbookLockedBanner" class="locked-card hidden">
+            <div class="locked-icon">🔒</div>
+            <div>
+              <h3>Logbook Submission Locked</h3>
+              <p>You cannot upload or submit weekly logbook entries until your internship placement has been officially reviewed and <strong>Accepted</strong> by your lecturer.</p>
+              <div style="margin-top: 8px;">
+                Current Placement Status: <span id="lockedStatusBadge" class="status-badge status-pending">Pending</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- LOGBOOK FORM (UNLOCKED ONLY WHEN ACCEPTED) -->
+          <div id="logbookUnlockedArea" class="content-card">
+            <h3>Add New Weekly Log Entry</h3>
+            <form id="logbookForm" class="logbook-form">
+              <div class="field-row">
+                <div class="field-group">
+                  <label for="logWeek">Week Number</label>
+                  <select id="logWeek" required>
+                    <option value="">Select Week</option>
+                  </select>
+                  <small class="file-help" id="logWeekHelp">Weeks are calculated from your internship duration.</small>
+                </div>
+                <div class="field-group">
+                  <label for="logDates">Date Range</label>
+                  <input type="text" id="logDates" placeholder="e.g. Oct 20 - Oct 24" required />
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label for="logTasks">Weekly Activities & Tasks Performed</label>
+                <textarea id="logTasks" placeholder="Summarize duties carried out from Monday to Friday..." required></textarea>
+              </div>
+
+              <div class="field-group">
+                <label for="logSkills">New Skills & Tools Learned</label>
+                <input type="text" id="logSkills" placeholder="e.g. Git, Network configuration, Python backend..." required />
+              </div>
+
+              <div class="field-group">
+                <label for="logImages">Upload images for this week (optional)</label>
+                <input type="file" id="logImages" accept="image/*" multiple />
+                <small class="file-help">Add screenshots, attendance proof, or work photos for this week's entry.</small>
+              </div>
+
+              <div class="submit-group" style="text-align: left;">
+                <button type="submit" class="primary-btn-sm">+ Save Weekly Log Entry</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Logbook History -->
+          <div class="content-card" style="margin-top: 24px;">
+            <h3>Submitted Weekly Entries</h3>
+            <div id="logbookList" class="logbook-list">
+              <p class="record-empty">No weekly log entries recorded yet.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== VIEW 4: LECTURER REVIEW DASHBOARD ==================== -->
+        <section id="viewLecturerDashboard" class="dash-view-section hidden">
+          <div class="view-header">
+            <h2>Lecturer Review Dashboard</h2>
+            <p class="dashboard-desc">Review student submissions, inspect acceptance letters, and monitor progress.</p>
+          </div>
+
+          <!-- KPI Summary Cards -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-label">Total Applications</span>
+              <span class="kpi-value" id="kpiTotal">0</span>
+            </div>
+            <div class="kpi-card kpi-pending">
+              <span class="kpi-label">Pending Review</span>
+              <span class="kpi-value" id="kpiPending">0</span>
+            </div>
+            <div class="kpi-card kpi-accepted">
+              <span class="kpi-label">Accepted</span>
+              <span class="kpi-value" id="kpiAccepted">0</span>
+            </div>
+            <div class="kpi-card kpi-denied">
+              <span class="kpi-label">Denied</span>
+              <span class="kpi-value" id="kpiDenied">0</span>
+            </div>
+          </div>
+
+          <!-- Search & Filter Toolbar -->
+          <div class="db-toolbar">
+            <div class="search-box">
+              <input type="text" id="dbSearchInput" placeholder="🔍 Search student name, matric, company..." />
+            </div>
+            <div class="filter-group">
+              <button type="button" class="filter-pill active" data-filter="all">All</button>
+              <button type="button" class="filter-pill" data-filter="Pending">Pending</button>
+              <button type="button" class="filter-pill" data-filter="Accepted">Accepted</button>
+              <button type="button" class="filter-pill" data-filter="Denied">Denied</button>
+            </div>
+            <button type="button" class="primary-btn-sm" onclick="approveAllLogbooks()">✅ Approve All Logs</button>
+          </div>
+
+          <div class="db-panel active" id="dbPanel">
+            <div class="db-message" id="dbMessage"></div>
+            <div class="table-responsive">
+              <table class="db-table">
+                <thead>
+                  <tr>
+                    <th style="width: 35px;">#</th>
+                    <th>Student</th>
+                    <th>Matric</th>
+                    <th>Department</th>
+                    <th>Company & Phone</th>
+                    <th>Supervisor</th>
+                    <th>Dates</th>
+                    <th style="width: 85px;">Progress</th>
+                    <th style="width: 95px;">Status</th>
+                    <th style="width: 140px;">Actions</th>
+                    <th>Documents</th>
+                    <th>Notes & Feedback</th>
+                  </tr>
+                </thead>
+                <tbody id="dbTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 1: DOCUMENT PREVIEW ==================== -->
+  <div id="previewModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="previewTitle">Document Preview</h3>
+        <button type="button" id="closePreviewBtn" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body" id="previewBody"></div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: OFFICIAL CLEARANCE SLIP ==================== -->
+  <div id="clearanceModal" class="modal-backdrop hidden">
+    <div class="modal-box clearance-slip-box">
+      <div class="slip-actions no-print">
+        <button type="button" class="primary-btn-sm" onclick="window.print()">🖨️ Print Slip / Save PDF</button>
+        <button type="button" id="closeSlipBtn" class="outline-button">Close</button>
+      </div>
+
+      <!-- Printable Document Area -->
+      <div id="slipPrintArea" class="printable-slip">
+        <div class="slip-letterhead">
+          <h2>DIRECTORATE OF INDUSTRIAL TRAINING & SIWES</h2>
+          <p class="slip-subhead">FACULTY INTERNSHIP PLACEMENT CLEARANCE SLIP</p>
+        </div>
+
+        <div class="slip-stamp">APPROVED</div>
+
+        <div class="slip-grid">
+          <div><strong>Student Name:</strong> <span id="slipFullName"></span></div>
+          <div><strong>Matric Number:</strong> <span id="slipMatric"></span></div>
+          <div><strong>Department:</strong> <span id="slipDept"></span></div>
+          <div><strong>Faculty / School:</strong> <span id="slipSchool"></span></div>
+          <div><strong>Company / Organization:</strong> <span id="slipCompany"></span></div>
+          <div><strong>Company Contact:</strong> <span id="slipPhone"></span></div>
+          <div><strong>Assigned Supervisor:</strong> <span id="slipSupervisor"></span></div>
+          <div><strong>Approved Period:</strong> <span id="slipDates"></span></div>
+        </div>
+
+        <div class="slip-verification-box">
+          <div class="slip-qr-box">
+            <span class="qr-label">DIGITAL VERIFIED</span>
+            <code id="slipQrCode">SIWES-VERIFIED-2026</code>
+          </div>
+          <div class="slip-notice">
+            This certifies that the above-named student has officially registered their SIWES internship placement and is authorized to commence industrial training under school supervision.
+          </div>
+        </div>
+
+        <div class="slip-signatures">
+          <div class="sig-line">
+            <div class="line"></div>
+            <span>Student Signature & Date</span>
+          </div>
+          <div class="sig-line">
+            <div class="line"></div>
+            <span>Departmental SIWES Coordinator</span>
+          </div>
+          <div class="sig-line">
+            <div class="line"></div>
+            <span>Head of Department</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 3: LECTURER VIEW STUDENT LOGS ==================== -->
+  <div id="studentLogsModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="logsModalTitle">Student Weekly Logbook</h3>
+        <button type="button" id="closeLogsBtn" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body" id="logsModalBody"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="database.js"></script>
+  <script src="scripts.js"></script>
+</body>
+</html>
